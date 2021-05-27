@@ -1,15 +1,27 @@
-import React from "react";
-import { useColorMode, Button } from "@chakra-ui/react";
+import React, { useState } from "react";
+import { Router, Route, Redirect, Switch } from "react-router-dom";
+import history from "./history";
+
+// Components
+import SideBar from "./components/SideBar";
+import Home from "./views/Home";
+import Dashboard from "./views/Dashboard";
 
 function App() {
-  const { colorMode, toggleColorMode } = useColorMode();
-
+  const routes = (
+    <Switch>
+      <Route exact path="/" component={Home} />
+      <Route exact path="/dashboard" component={Dashboard} />
+      <Redirect to="/" />
+    </Switch>
+  );
   return (
-    <header>
-      <Button onClick={toggleColorMode}>
-        Toggle {colorMode === "light" ? "Dark" : "Light"}
-      </Button>
-    </header>
+    <Router history={history}>
+      <>
+        <SideBar />
+        {routes}
+      </>
+    </Router>
   );
 }
 
