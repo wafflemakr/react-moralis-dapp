@@ -29,7 +29,10 @@ export default function Profile() {
       username: formData.username,
       email: formData.email,
       password: formData.password === undefined ? "" : formData.password,
-    }).then(() => alert("Data Updated!"));
+    }).then(() => {
+      alert("Data Updated!");
+      history.push("/");
+    });
   };
 
   return (
