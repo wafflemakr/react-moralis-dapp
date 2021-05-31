@@ -124,7 +124,7 @@ export default function SideBar() {
                   <ExternalLinkIcon mx="2px" />
                 </Link>
               ) : (
-                <Button onClick={connect}>Connect Wallet</Button>
+                <Button onClick={connect}>Connect</Button>
               )}
             </Box>
           </DrawerHeader>
@@ -145,7 +145,6 @@ export default function SideBar() {
               icon={colorMode === "light" ? <MoonIcon /> : <SunIcon />}
               onClick={toggleTheme}
               variant="outline"
-              // variant="ghost"
             />
           </DrawerFooter>
         </DrawerContent>

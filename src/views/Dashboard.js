@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   Container,
   Heading,
+  Button,
   Box,
   Table,
   TableCaption,
@@ -11,13 +12,17 @@ import {
   Tbody,
   Thead,
   Tfoot,
+  Link,
+  IconButton,
 } from "@chakra-ui/react";
-import { Link } from "@chakra-ui/react";
+import { AddIcon, MinusIcon } from "@chakra-ui/icons";
 import { useMoralisQuery, useMoralis } from "react-moralis";
+import { Web3Context } from "../context";
 import notify from "../utils/notify";
 
 export default function Dashboard() {
-  const [limit, setLimit] = useState(10);
+  const { account } = useContext(Web3Context);
+  const [limit, setLimit] = useState(100);
   const [tokenTransfers, setTokenTransfers] = useState([]);
 
   const { web3 } = useMoralis();
@@ -25,11 +30,13 @@ export default function Dashboard() {
   const { data, error, isLoading } = useMoralisQuery(
     "PolygonTokenTransfers",
     (query) => query.limit(limit),
-    [limit],
-    {
-      live: "true",
-    }
+    [limit]
+    // {
+    //   live: "true",
+    // }
   );
+
+  const showMore = () => setLimit(limit + 10);
 
   const {
     data: tokenData,
@@ -37,11 +44,10 @@ export default function Dashboard() {
     isLoading: isDataLoading,
   } = useMoralisQuery(
     "PolygonTokenBalance",
-    (query) => query.limit(limit),
-    [limit],
-    {
-      live: "true",
-    }
+    (query) => query.limit(20)
+    // {
+    //   live: "true",
+    // }
   );
 
   useEffect(() => {
@@ -50,23 +56,46 @@ export default function Dashboard() {
   }, [error, tokenError]);
 
   useEffect(() => {
-    if (data.length > 0 && !isDataLoading && !isLoading) {
+    if (
+      tokenTransfers.length === 0 &&
+      account &&
+      data.length > 0 &&
+      !isDataLoading &&
+      !isLoading
+    ) {
       const symbols = {};
       tokenData.forEach((t) => {
         symbols[t.attributes.token_address] = t.attributes.symbol;
       });
 
-      const _transfers = data.map(({ attributes: att }) => {
-        return {
-          token: att.token_address,
-          symbol: symbols[att.token_address] || "",
-          amount: Number(web3.utils.fromWei(att.value)).toPrecision(2),
-          hash: att.transaction_hash,
-        };
-      });
+      const _transfers = data
+        .filter(
+          ({ attributes: att }) =>
+            att.from_address === account || att.to_address === account
+        )
+        .map(({ attributes: att }) => {
+          return {
+            token: att.token_address,
+            symbol: symbols[att.token_address] || " - ",
+            amount: Number(web3.utils.fromWei(att.value)).toPrecision(2),
+            hash: att.transaction_hash,
+            type:
+              att.from_address.toLowerCase() === account.toLowerCase()
+                ? "send"
+                : "receive",
+          };
+        });
       setTokenTransfers(_transfers);
     }
-  }, [data, tokenData, web3, isDataLoading, isLoading]);
+  }, [
+    data,
+    tokenData,
+    web3,
+    isDataLoading,
+    isLoading,
+    account,
+    tokenTransfers,
+  ]);
 
   return (
     <Container maxW="xl" centerContent>
@@ -80,7 +109,8 @@ export default function Dashboard() {
             <TableCaption>ERC20 token transactions</TableCaption>
             <Thead>
               <Tr>
-                <Th>Token</Th>
+                <Th textAlign="center">Type</Th>
+                <Th textAlign="center">Token</Th>
                 <Th>Amount</Th>
                 <Th>Receipt</Th>
               </Tr>
@@ -88,7 +118,16 @@ export default function Dashboard() {
             <Tbody>
               {tokenTransfers.map((t, k) => (
                 <Tr key={k}>
-                  <Td>{t.symbol}</Td>
+                  <Td textAlign="center">
+                    <IconButton
+                      colorScheme="teal"
+                      size="lg"
+                      icon={t.type === "send" ? <AddIcon /> : <MinusIcon />}
+                      // variant="outline"
+                      variant="ghost"
+                    />
+                  </Td>
+                  <Td textAlign="center">{t.symbol}</Td>
                   <Td>{t.amount}</Td>
                   <Td>
                     <Link
@@ -112,6 +151,9 @@ export default function Dashboard() {
             </Tfoot>
           </Table>
         )}
+        <Box mt={10} textAlign="center">
+          <Button onClick={showMore}>Show more</Button>
+        </Box>
       </Box>
     </Container>
   );
