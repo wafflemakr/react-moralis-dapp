@@ -1,5 +1,6 @@
-import React, { useContext } from "react";
+import React, { useContext, useCallback } from "react";
 import {
+  Text,
   Button,
   IconButton,
   Box,
@@ -16,6 +17,7 @@ import {
 } from "@chakra-ui/react";
 import { Link } from "@chakra-ui/react";
 import { ExternalLinkIcon, MoonIcon, SunIcon } from "@chakra-ui/icons";
+import { useMoralis } from "react-moralis";
 import { NavLink } from "react-router-dom";
 import { Web3Context } from "../context";
 
@@ -23,6 +25,7 @@ export default function SideBar() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { colorMode, toggleColorMode } = useColorMode();
   const { connect, account, logout } = useContext(Web3Context);
+  const { user } = useMoralis();
 
   const btnRef = React.useRef();
 
@@ -30,6 +33,64 @@ export default function SideBar() {
     toggleColorMode();
     localStorage.setItem("theme", colorMode);
   };
+
+  const renderRoutes = useCallback(() => {
+    if (!account)
+      return (
+        <div>
+          <NavLink
+            to="/"
+            exact
+            activeStyle={{
+              fontWeight: "bold",
+            }}
+            onClick={onClose}
+          >
+            Home
+          </NavLink>
+        </div>
+      );
+    return (
+      <>
+        <div>
+          <NavLink
+            to="/"
+            exact
+            activeStyle={{
+              fontWeight: "bold",
+            }}
+            onClick={onClose}
+          >
+            Home
+          </NavLink>
+        </div>
+        <div>
+          <NavLink
+            to="/dashboard"
+            exact
+            activeStyle={{
+              fontWeight: "bold",
+            }}
+            onClick={onClose}
+          >
+            Dashboard
+          </NavLink>
+        </div>
+        <div>
+          <NavLink
+            to="/profile"
+            exact
+            activeStyle={{
+              fontWeight: "bold",
+            }}
+            onClick={onClose}
+          >
+            Profile
+          </NavLink>
+        </div>
+      </>
+    );
+  }, [account, onClose]);
 
   return (
     <>
@@ -53,9 +114,10 @@ export default function SideBar() {
           <DrawerCloseButton />
           <DrawerHeader>
             <Box mt={6}>
+              {user && <Text mb={5}>Welcome, {user.attributes.username}!</Text>}
               {account ? (
                 <Link
-                  href={`https://etherscan.io/address/${account}`}
+                  href={`https://explorer-mainnet.maticvigil.com/address/${account}`}
                   isExternal
                 >
                   {account.substring(0, 6) + "..." + account.substring(36, 42)}{" "}
@@ -68,44 +130,7 @@ export default function SideBar() {
           </DrawerHeader>
 
           <DrawerBody>
-            <Stack spacing={6}>
-              <div>
-                <NavLink
-                  to="/"
-                  exact
-                  activeStyle={{
-                    fontWeight: "bold",
-                  }}
-                  onClick={onClose}
-                >
-                  Home
-                </NavLink>
-              </div>
-              <div>
-                <NavLink
-                  to="/dashboard"
-                  exact
-                  activeStyle={{
-                    fontWeight: "bold",
-                  }}
-                  onClick={onClose}
-                >
-                  Dashboard
-                </NavLink>
-              </div>
-              <div>
-                <NavLink
-                  to="/profile"
-                  exact
-                  activeStyle={{
-                    fontWeight: "bold",
-                  }}
-                  onClick={onClose}
-                >
-                  Profile
-                </NavLink>
-              </div>
-            </Stack>
+            <Stack spacing={6}>{renderRoutes()}</Stack>
             {account && (
               <Button mt={6} onClick={logout}>
                 Logout

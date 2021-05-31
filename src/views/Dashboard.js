@@ -14,6 +14,7 @@ import {
 } from "@chakra-ui/react";
 import { Link } from "@chakra-ui/react";
 import { useMoralisQuery, useMoralis } from "react-moralis";
+import notify from "../utils/notify";
 
 export default function Dashboard() {
   const [limit, setLimit] = useState(10);
@@ -30,32 +31,56 @@ export default function Dashboard() {
     }
   );
 
+  const {
+    data: tokenData,
+    error: tokenError,
+    isLoading: isDataLoading,
+  } = useMoralisQuery(
+    "PolygonTokenBalance",
+    (query) => query.limit(limit),
+    [limit],
+    {
+      live: "true",
+    }
+  );
+
   useEffect(() => {
-    if (data.length > 0) {
+    if (error) notify("error", "Error", error.message);
+    if (tokenError) notify("error", "Error", tokenError.message);
+  }, [error, tokenError]);
+
+  useEffect(() => {
+    if (data.length > 0 && !isDataLoading && !isLoading) {
+      const symbols = {};
+      tokenData.forEach((t) => {
+        symbols[t.attributes.token_address] = t.attributes.symbol;
+      });
+
       const _transfers = data.map(({ attributes: att }) => {
         return {
           token: att.token_address,
-          amount: web3.utils.fromWei(att.value),
+          symbol: symbols[att.token_address] || "",
+          amount: Number(web3.utils.fromWei(att.value)).toPrecision(2),
           hash: att.transaction_hash,
         };
       });
       setTokenTransfers(_transfers);
     }
-  }, [data, web3]);
+  }, [data, tokenData, web3, isDataLoading, isLoading]);
 
   return (
     <Container maxW="xl" centerContent>
       <Heading>DASHBOARD PAGE</Heading>
 
-      <Box mt={8}>
+      <Box mt={12}>
         {isLoading ? (
           "Loading..."
         ) : (
-          <Table variant="striped" colorScheme="teal">
+          <Table variant="simple" colorScheme="teal">
             <TableCaption>ERC20 token transactions</TableCaption>
             <Thead>
               <Tr>
-                <Th>Token Address</Th>
+                <Th>Token</Th>
                 <Th>Amount</Th>
                 <Th>Receipt</Th>
               </Tr>
@@ -63,7 +88,7 @@ export default function Dashboard() {
             <Tbody>
               {tokenTransfers.map((t, k) => (
                 <Tr key={k}>
-                  <Td>{t.token}</Td>
+                  <Td>{t.symbol}</Td>
                   <Td>{t.amount}</Td>
                   <Td>
                     <Link

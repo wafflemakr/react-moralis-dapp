@@ -16,6 +16,7 @@ import {
 } from "@chakra-ui/react";
 import { useMoralis } from "react-moralis";
 import history from "../history";
+import notify from "../utils/notify";
 
 export default function Profile() {
   const [formData, setFormData] = useState({});
@@ -29,10 +30,14 @@ export default function Profile() {
       username: formData.username,
       email: formData.email,
       password: formData.password === undefined ? "" : formData.password,
-    }).then(() => {
-      alert("Data Updated!");
-      history.push("/");
-    });
+    })
+      .then(() => {
+        notify("success", "Success", "Data updated!", 3000);
+        // setTimeout(() => {
+        //   history.push("/");
+        // }, 2000);
+      })
+      .catch((e) => notify("error", e.message, 3000));
   };
 
   return (
