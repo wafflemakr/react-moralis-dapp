@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Router, Route, Redirect, Switch } from "react-router-dom";
 import history from "./history";
 
@@ -6,12 +6,14 @@ import history from "./history";
 import SideBar from "./components/SideBar";
 import Home from "./views/Home";
 import Dashboard from "./views/Dashboard";
+import Profile from "./views/Profile";
 
 function App() {
   const routes = (
     <Switch>
       <Route exact path="/" component={Home} />
       <Route exact path="/dashboard" component={Dashboard} />
+      <Route exact path="/profile" component={Profile} />
       <Redirect to="/" />
     </Switch>
   );
